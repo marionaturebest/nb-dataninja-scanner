@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NB Scanner — Sample Barcodes</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 16px; }
+  h1 { font-size: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 16px; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; text-align: center; background: #fff; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; color: #555; }
+  .card .val { font-family: monospace; font-size: 12px; margin-top: 6px; word-break: break-all; color: #2d6a2e; }
+  img, svg { width: 100%; height: auto; }
+  .note { background: #fffbe6; border: 1px solid #f2d96b; padding: 10px; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>Sample Barcodes</h1>
+  <p class="note">
+    Open this page on any screen (including another monitor) and scan the codes
+    below from <a href="./test-page.html">test-page.html</a> running on your iPad.
+  </p>
+
+  <div class="grid" id="grid"></div>
+
+  <!-- QR codes via api.qrserver.com (free, no-auth, HTTPS). -->
+  <!-- For production, prefer a self-hosted or bundled generator. -->
+
+  <script>
+    var samples = [
+      { label: 'QR — WO12345',        type: 'qr',  value: 'WO12345' },
+      { label: 'QR — PART-ABC-001',   type: 'qr',  value: 'PART-ABC-001' },
+      { label: 'QR — LOT20260414A',   type: 'qr',  value: 'LOT20260414A' },
+      { label: 'QR — 42 (numeric)',   type: 'qr',  value: '42' },
+      { label: 'Code128 — 9781234567', type: 'code128', value: '9781234567' },
+      { label: 'Code39 — HELLO',      type: 'code39', value: 'HELLO' },
+      { label: 'EAN-13 — 5901234123457', type: 'ean13', value: '5901234123457' }
+    ];
+
+    // Use a public barcode image service for diverse formats. This page is
+    // TEST-ONLY and not deployed — we only need images for local scanning.
+    function urlFor(sample) {
+      if (sample.type === 'qr') {
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' +
+          encodeURIComponent(sample.value);
+      }
+      // bwip-js hosted renderer (no-auth) for linear barcodes
+      var map = { code128: 'code128', code39: 'code39', ean13: 'ean13' };
+      return 'https://bwipjs-api.metafloor.com/?bcid=' + map[sample.type] +
+        '&text=' + encodeURIComponent(sample.value) + '&scale=3&includetext';
+    }
+
+    var grid = document.getElementById('grid');
+    samples.forEach(function (s) {
+      var div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML =
+        '<h3>' + s.label + '</h3>' +
+        '<img alt="' + s.label + '" src="' + urlFor(s) + '">' +
+        '<div class="val">' + s.value + '</div>';
+      grid.appendChild(div);
+    });
+  </script>
+</body>
+</html>

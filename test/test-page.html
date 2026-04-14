@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NB Scanner — Test Form</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 700px; margin: 20px auto; padding: 0 16px; }
+  h1 { font-size: 20px; }
+  label { display: block; margin: 14px 0 4px; font-size: 14px; font-weight: 600; }
+  input, textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #bbb; border-radius: 6px; box-sizing: border-box; }
+  [contenteditable] { min-height: 60px; padding: 10px; border: 1px solid #bbb; border-radius: 6px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .log { margin-top: 24px; padding: 12px; background: #f5f5f5; border-radius: 6px; font-family: monospace; font-size: 12px; min-height: 40px; white-space: pre-wrap; }
+  .note { background: #fffbe6; border: 1px solid #f2d96b; padding: 10px; border-radius: 6px; font-size: 13px; }
+  button { padding: 10px 16px; font-size: 15px; border-radius: 6px; border: 1px solid #2d6a2e; background: #2d6a2e; color: #fff; cursor: pointer; margin-top: 12px; }
+</style>
+</head>
+<body>
+  <h1>Nature's Best Scanner — Local Test Page</h1>
+  <p class="note">
+    Tap any field below, then tap the green Scan button (bottom-right).
+    Each field logs its <code>input</code>/<code>change</code> events so you can verify
+    framework-style event listeners would see the scanned value.
+  </p>
+
+  <label for="wo">Work Order #</label>
+  <input id="wo" name="workOrder" type="text" placeholder="Scan WO barcode">
+
+  <div class="row">
+    <div>
+      <label for="part">Part #</label>
+      <input id="part" name="partNumber" type="text" placeholder="Scan part">
+    </div>
+    <div>
+      <label for="lot">Lot</label>
+      <input id="lot" name="lot" type="text" placeholder="Scan lot">
+    </div>
+  </div>
+
+  <label for="qty">Quantity</label>
+  <input id="qty" name="qty" type="number" placeholder="Scan / type quantity">
+
+  <label for="notes">Notes (textarea)</label>
+  <textarea id="notes" name="notes" rows="3" placeholder="Scan into multi-line"></textarea>
+
+  <label for="ce">Contenteditable field</label>
+  <div id="ce" contenteditable="true" data-name="ceNotes"></div>
+
+  <button type="button" id="clearLog">Clear event log</button>
+
+  <h3 style="margin-top:24px;">Event log</h3>
+  <div class="log" id="log"></div>
+
+  <script>
+    var log = document.getElementById('log');
+    function append(line) {
+      var now = new Date().toISOString().substring(11, 23);
+      log.textContent = '[' + now + '] ' + line + '\n' + log.textContent;
+    }
+    ['wo','part','lot','qty','notes','ce'].forEach(function (id) {
+      var el = document.getElementById(id);
+      ['input','change','keyup'].forEach(function (evt) {
+        el.addEventListener(evt, function () {
+          var v = el.isContentEditable ? el.textContent : el.value;
+          append(id + ' ' + evt + ' = ' + JSON.stringify(v));
+        });
+      });
+    });
+    document.getElementById('clearLog').addEventListener('click', function () {
+      log.textContent = '';
+    });
+  </script>
+
+  <!-- Load the scanner directly (no bookmarklet needed in local testing) -->
+  <script src="../nb-scanner.js"></script>
+</body>
+</html>

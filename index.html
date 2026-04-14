@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nature's Best — DataNinja Barcode Scanner</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 720px; margin: 30px auto; padding: 0 16px; line-height: 1.5; color: #222; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 17px; margin-top: 28px; }
+  code, pre { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  pre { padding: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .bookmarklet { display: inline-block; padding: 12px 18px; background: #2d6a2e; color: #fff !important; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 8px 0; }
+  .note { background: #fffbe6; border: 1px solid #f2d96b; padding: 10px; border-radius: 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>Nature's Best — DataNinja Barcode Scanner</h1>
+  <p>
+    Bookmarklet that injects a floating "Scan" button into any web page
+    (notably <code>naturebest.dataninja.com</code>) and writes scanned barcode
+    values directly into the last-focused input field. Zero install, zero cost.
+  </p>
+
+  <h2>1. Drag this link to your bookmark bar</h2>
+  <p>
+    <a class="bookmarklet" id="bm" href="#">NB Scan</a>
+  </p>
+  <p class="note">
+    On iPad: tap &amp; hold the bookmark bar area, add a new bookmark manually,
+    and paste the URL below as the bookmark's address.
+  </p>
+
+  <h2>2. Or copy the bookmarklet URL</h2>
+  <pre id="bm-code"></pre>
+
+  <h2>3. Use it</h2>
+  <ol>
+    <li>Open DataNinja and navigate to the page where you want to scan.</li>
+    <li>Tap the input field you want to fill.</li>
+    <li>Tap the <strong>NB Scan</strong> bookmark in your bookmark bar.</li>
+    <li>A green scan button appears bottom-right. Tap it.</li>
+    <li>Point the camera at the barcode. The value is injected into the field.</li>
+  </ol>
+
+  <h2>Test locally</h2>
+  <ul>
+    <li><a href="./test/test-page.html">test-page.html</a> — sample form</li>
+    <li><a href="./test/test-barcodes.html">test-barcodes.html</a> — sample QR + 1D codes to scan</li>
+  </ul>
+
+  <script>
+    // Build the bookmarklet dynamically so it points at wherever this page is hosted.
+    var base = new URL('./nb-scanner.js', location.href).toString();
+    var code = "javascript:void(function(){var s=document.createElement('script');s.src='" + base + "?v='+Date.now();document.head.appendChild(s)})()";
+    var a = document.getElementById('bm');
+    a.href = code;
+    document.getElementById('bm-code').textContent = code;
+  </script>
+</body>
+</html>
