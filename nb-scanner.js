@@ -37,9 +37,9 @@
     var css = [
       '#' + BTN_ID + '{position:fixed;top:20px;right:20px;width:64px;height:64px;border-radius:50%;',
       'background:#2d6a2e;color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.3);',
-      'font-size:28px;cursor:pointer;z-index:999999;display:flex;align-items:center;justify-content:center;',
-      'font-family:-apple-system,BlinkMacSystemFont,sans-serif;touch-action:manipulation}',
-      '#' + BTN_ID + ':active{transform:scale(.95)}',
+      'font-size:28px;cursor:grab;z-index:999999;display:flex;align-items:center;justify-content:center;',
+      'font-family:-apple-system,BlinkMacSystemFont,sans-serif;touch-action:none;user-select:none}',
+      '#' + BTN_ID + ':active{cursor:grabbing;transform:scale(.95)}',
       '#' + OVERLAY_ID + '{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000000;',
       'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;',
       'font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#fff}',
@@ -301,27 +301,133 @@
   }
 
   // --- Floating button ----------------------------------------------------
+  var POS_KEY = 'nb-scan-pos';
+  var DRAG_THRESHOLD = 6; // px — movement beyond this is a drag, not a tap
+
+  function applySavedPosition(btn) {
+    try {
+      var raw = localStorage.getItem(POS_KEY);
+      if (!raw) return;
+      var p = JSON.parse(raw);
+      if (typeof p.left === 'number' && typeof p.top === 'number') {
+        btn.style.left = p.left + 'px';
+        btn.style.top = p.top + 'px';
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+      }
+    } catch (_) { /* noop */ }
+  }
+
+  function savePosition(left, top) {
+    try { localStorage.setItem(POS_KEY, JSON.stringify({ left: left, top: top })); } catch (_) {}
+  }
+
+  function clampToViewport(left, top, size) {
+    var margin = 4;
+    var maxLeft = window.innerWidth - size - margin;
+    var maxTop = window.innerHeight - size - margin;
+    return {
+      left: Math.max(margin, Math.min(left, maxLeft)),
+      top: Math.max(margin, Math.min(top, maxTop))
+    };
+  }
+
+  function makeDraggable(btn, onTap, onDoubleTap) {
+    var dragging = false;
+    var moved = false;
+    var startX = 0, startY = 0;
+    var originLeft = 0, originTop = 0;
+    var lastTap = 0;
+
+    function pointer(e) {
+      if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function onDown(e) {
+      dragging = true;
+      moved = false;
+      var p = pointer(e);
+      startX = p.x; startY = p.y;
+      var rect = btn.getBoundingClientRect();
+      originLeft = rect.left;
+      originTop = rect.top;
+      // pin to absolute coords so the drag math matches
+      btn.style.left = originLeft + 'px';
+      btn.style.top = originTop + 'px';
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+      btn.style.transition = 'none';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onUp);
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      var p = pointer(e);
+      var dx = p.x - startX;
+      var dy = p.y - startY;
+      if (!moved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+        moved = true;
+      }
+      if (moved) {
+        if (e.cancelable) e.preventDefault();
+        var size = btn.offsetWidth;
+        var clamped = clampToViewport(originLeft + dx, originTop + dy, size);
+        btn.style.left = clamped.left + 'px';
+        btn.style.top = clamped.top + 'px';
+      }
+    }
+
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+      btn.style.transition = '';
+      if (!dragging) return;
+      dragging = false;
+      if (moved) {
+        var rect = btn.getBoundingClientRect();
+        savePosition(rect.left, rect.top);
+      } else {
+        // It was a tap (or double-tap)
+        var now = Date.now();
+        if (now - lastTap < 400) { onDoubleTap(); } else { onTap(); }
+        lastTap = now;
+      }
+    }
+
+    btn.addEventListener('mousedown', onDown);
+    btn.addEventListener('touchstart', onDown, { passive: true });
+    // Suppress the native click so drags don't also fire the handler
+    btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); });
+  }
+
   function injectButton() {
     if (document.getElementById(BTN_ID)) return;
     var btn = document.createElement('button');
     btn.id = BTN_ID;
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Scan barcode');
-    btn.title = 'Scan barcode (double-tap for log)';
-    btn.textContent = '\u2637'; // Unicode trigram for heaven — scan-looking glyph
-    btn.innerHTML = '&#9783;';  // viewfinder-ish
-    var lastTap = 0;
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var now = Date.now();
-      if (now - lastTap < 400) {
-        toggleLog();
-      } else {
-        openScanner();
-      }
-      lastTap = now;
-    });
+    btn.title = 'Scan barcode (drag to move, double-tap for log)';
+    btn.innerHTML = '&#9783;';
     document.body.appendChild(btn);
+
+    applySavedPosition(btn);
+    makeDraggable(btn, openScanner, toggleLog);
+
+    // Re-clamp on orientation / resize so the button doesn't disappear offscreen
+    window.addEventListener('resize', function () {
+      var rect = btn.getBoundingClientRect();
+      if (rect.left === 0 && rect.top === 0 && btn.style.left === '') return; // using default top/right
+      var c = clampToViewport(rect.left, rect.top, btn.offsetWidth);
+      btn.style.left = c.left + 'px';
+      btn.style.top = c.top + 'px';
+      savePosition(c.left, c.top);
+    });
 
     var panel = document.createElement('div');
     panel.id = LOG_ID;
