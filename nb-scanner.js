@@ -35,7 +35,7 @@
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var css = [
-      '#' + BTN_ID + '{position:fixed;bottom:20px;right:20px;width:64px;height:64px;border-radius:50%;',
+      '#' + BTN_ID + '{position:fixed;top:20px;right:20px;width:64px;height:64px;border-radius:50%;',
       'background:#2d6a2e;color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.3);',
       'font-size:28px;cursor:pointer;z-index:999999;display:flex;align-items:center;justify-content:center;',
       'font-family:-apple-system,BlinkMacSystemFont,sans-serif;touch-action:manipulation}',
@@ -52,7 +52,7 @@
       'font-weight:600;cursor:pointer;touch-action:manipulation}',
       '#' + OVERLAY_ID + ' .nb-scan-cancel{background:#c33;color:#fff}',
       '#' + OVERLAY_ID + ' .nb-scan-switch{background:#555;color:#fff}',
-      '#' + TOAST_ID + '{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120%);',
+      '#' + TOAST_ID + '{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120%);',
       'background:#2d6a2e;color:#fff;padding:12px 20px;border-radius:8px;z-index:1000001;',
       'box-shadow:0 4px 12px rgba(0,0,0,.3);font-family:-apple-system,BlinkMacSystemFont,sans-serif;',
       'font-size:15px;transition:transform .25s ease;max-width:90vw;word-break:break-all}',
@@ -60,7 +60,7 @@
       '#' + TOAST_ID + '.nb-error{background:#c33}',
       '.nb-scan-flash{animation:nb-scan-flash .6s ease}',
       '@keyframes nb-scan-flash{0%{background:#b9f6ca}100%{background:transparent}}',
-      '#' + LOG_ID + '{position:fixed;bottom:94px;right:20px;width:280px;max-height:40vh;',
+      '#' + LOG_ID + '{position:fixed;top:94px;right:20px;width:280px;max-height:40vh;',
       'background:rgba(0,0,0,.85);color:#b9f6ca;font-family:monospace;font-size:11px;',
       'padding:8px;border-radius:6px;overflow-y:auto;z-index:999998;display:none}',
       '#' + LOG_ID + '.nb-show{display:block}',
